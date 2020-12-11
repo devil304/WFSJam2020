@@ -11,9 +11,11 @@ public class Run : MonoBehaviour
     [SerializeField] float minAngle, maxAngle;
     Vector2 val = Vector2.zero;
     Transform MyCamera;
+    bool climb;
 
     private void Start()
     {
+        Cursor.lockState = CursorLockMode.Locked;
         MyCamera = transform.GetChild(0);
         inputy = new KlikKlik();
         inputy.main.Enable();
@@ -28,8 +30,7 @@ public class Run : MonoBehaviour
         };
         inputy.main.Camera.performed += v =>
         {
-            MyCamera.Rotate(new Vector3(-v.ReadValue<Vector2>().y*(CamSpeedY/10), 0,0),Space.Self);
-            Vector3 angles = MyCamera.localEulerAngles;
+            Vector3 angles = MyCamera.localEulerAngles+ new Vector3(-v.ReadValue<Vector2>().y * (CamSpeedY / 10), 0, 0);
             angles.x -= angles.x > 90 ? 360 : 0;
             if (angles.x < minAngle)
                 angles.x = minAngle;
@@ -40,16 +41,25 @@ public class Run : MonoBehaviour
             transform.Rotate(new Vector3(0, v.ReadValue<Vector2>().x * (CamSpeedX / 10), 0), Space.World);
         };
     }
-
+    float ClimbForce = 0;
     private void Update()
     {
-        myRb.AddForce(transform.forward * val.y * speed, ForceMode.Force);
+        if (!climb)
+            myRb.AddForce(transform.forward * val.y * speed, ForceMode.Force);
+        else
+            myRb.AddForce(transform.up * ClimbForce, ForceMode.Force);
         myRb.AddForce(transform.right * val.x * speed, ForceMode.Force);
+        if(climb&&ClimbForce > 10)
+            ClimbForce -= myRb.drag * Time.deltaTime;
         //Debug.Log(inputy.main.Camera.ReadValue<Vector2>());
     }
 
-    private void LateUpdate()
+    private void OnCollisionEnter(Collision collision)
     {
-        Cursor.lockState = CursorLockMode.Locked;
+        if (collision.gameObject.CompareTag("wall"))
+        {
+            climb = true;
+            ClimbForce = (myRb.velocity.z > 0 ? myRb.velocity.z : 0) + 11;
+        }
     }
 }
