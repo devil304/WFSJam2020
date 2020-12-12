@@ -15,8 +15,8 @@ public class Run : MonoBehaviour
     int CamCanc = 0;
     Coroutine SIActive;
     
-    [SerializeField] float jumpUpForce = 1;
-    [SerializeField] float jumpForwardForce = 1;
+    [SerializeField] float jumpUpForce = 500;
+    [SerializeField] float jumpForwardForce = 250;
     [SerializeField] float slideSize = 0.5f;
     private float properSize = 1f;
     private bool isSliding = false;
