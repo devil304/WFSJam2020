@@ -41,6 +41,14 @@ public class @KlikKlik : IInputActionCollection, IDisposable
                     ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
                     ""interactions"": """"
+                },
+                {
+                    ""name"": ""Hook"",
+                    ""type"": ""Button"",
+                    ""id"": ""3103f6a7-bc85-4422-984a-3b778eb641fb"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
                 }
             ],
             ""bindings"": [
@@ -142,6 +150,17 @@ public class @KlikKlik : IInputActionCollection, IDisposable
                     ""action"": ""Camera"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""f0f8fc11-bfa1-45c8-bd15-d02addd6ec3c"",
+                    ""path"": ""<Mouse>/leftButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Hook"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -153,6 +172,7 @@ public class @KlikKlik : IInputActionCollection, IDisposable
         m_main_move = m_main.FindAction("move", throwIfNotFound: true);
         m_main_JumpSlide = m_main.FindAction("JumpSlide", throwIfNotFound: true);
         m_main_Camera = m_main.FindAction("Camera", throwIfNotFound: true);
+        m_main_Hook = m_main.FindAction("Hook", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -205,6 +225,7 @@ public class @KlikKlik : IInputActionCollection, IDisposable
     private readonly InputAction m_main_move;
     private readonly InputAction m_main_JumpSlide;
     private readonly InputAction m_main_Camera;
+    private readonly InputAction m_main_Hook;
     public struct MainActions
     {
         private @KlikKlik m_Wrapper;
@@ -212,6 +233,7 @@ public class @KlikKlik : IInputActionCollection, IDisposable
         public InputAction @move => m_Wrapper.m_main_move;
         public InputAction @JumpSlide => m_Wrapper.m_main_JumpSlide;
         public InputAction @Camera => m_Wrapper.m_main_Camera;
+        public InputAction @Hook => m_Wrapper.m_main_Hook;
         public InputActionMap Get() { return m_Wrapper.m_main; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -230,6 +252,9 @@ public class @KlikKlik : IInputActionCollection, IDisposable
                 @Camera.started -= m_Wrapper.m_MainActionsCallbackInterface.OnCamera;
                 @Camera.performed -= m_Wrapper.m_MainActionsCallbackInterface.OnCamera;
                 @Camera.canceled -= m_Wrapper.m_MainActionsCallbackInterface.OnCamera;
+                @Hook.started -= m_Wrapper.m_MainActionsCallbackInterface.OnHook;
+                @Hook.performed -= m_Wrapper.m_MainActionsCallbackInterface.OnHook;
+                @Hook.canceled -= m_Wrapper.m_MainActionsCallbackInterface.OnHook;
             }
             m_Wrapper.m_MainActionsCallbackInterface = instance;
             if (instance != null)
@@ -243,6 +268,9 @@ public class @KlikKlik : IInputActionCollection, IDisposable
                 @Camera.started += instance.OnCamera;
                 @Camera.performed += instance.OnCamera;
                 @Camera.canceled += instance.OnCamera;
+                @Hook.started += instance.OnHook;
+                @Hook.performed += instance.OnHook;
+                @Hook.canceled += instance.OnHook;
             }
         }
     }
@@ -252,5 +280,6 @@ public class @KlikKlik : IInputActionCollection, IDisposable
         void OnMove(InputAction.CallbackContext context);
         void OnJumpSlide(InputAction.CallbackContext context);
         void OnCamera(InputAction.CallbackContext context);
+        void OnHook(InputAction.CallbackContext context);
     }
 }
