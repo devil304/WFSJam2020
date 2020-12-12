@@ -340,6 +340,7 @@ MonoBehaviour:
   SspeedUpTime: 0.5
   divider: 33
   timeToStopMiAir: 0.75
+  AirDragXZ: 0.996
   climb: 0
   isGrounded: 0
   wasGrounded: 0

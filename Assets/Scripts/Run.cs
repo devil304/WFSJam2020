@@ -8,7 +8,7 @@ public class Run : MonoBehaviour
     Rigidbody myRb;
     [SerializeField] float speed = 10, targetSpeed = 10, startSpeed = 15, speedUpTime = 2;
     [SerializeField, Range(0,100)] float CamSpeedY = 1, CamSpeedX = 1;
-    [SerializeField] float minAngle, maxAngle, stickiness=5, targetSSpeed = 10, startSSpeed = 15, SspeedUpTime = 2, divider=44, timeToStopMiAir = 3;
+    [SerializeField] float minAngle, maxAngle, stickiness=5, targetSSpeed = 10, startSSpeed = 15, SspeedUpTime = 2, divider=44, timeToStopMiAir = 3, AirDragXZ = 2;
     Vector2 val = Vector2.zero;
     Transform MyCamera, Camholder, rotator;
     [SerializeField]bool climb, isGrounded, wasGrounded, slope;
@@ -72,7 +72,13 @@ public class Run : MonoBehaviour
         if (!climb && !isGrounded && !slope)
         {
             val = Vector2.zero;
-            myRb.velocity = Vector3.Lerp(myRb.velocity, Physics.gravity, Time.deltaTime / timeToStopMiAir);
+            //myRb.velocity = Vector3.Lerp(myRb.velocity, Physics.gravity, Time.deltaTime / timeToStopMiAir);
+            Vector3 vel = transform.InverseTransformDirection(myRb.velocity);
+            vel.x *= AirDragXZ;
+            if(vel.y>0)
+                vel.y *= AirDragXZ;
+            vel.z *= AirDragXZ;
+            myRb.velocity = transform.TransformDirection(vel);
             //Debug.Log(myRb.velocity);
         }
         else if (val == Vector2.zero)
