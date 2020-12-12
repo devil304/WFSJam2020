@@ -15,7 +15,8 @@ public class Run : MonoBehaviour
     int CamCanc = 0;
     Coroutine SIActive;
     
-    [SerializeField] float jumpForce = 500;
+    [SerializeField] float jumpUpForce = 1;
+    [SerializeField] float jumpForwardForce = 1;
     [SerializeField] float slideSize = 0.5f;
     private float properSize = 1f;
 
@@ -140,15 +141,11 @@ public class Run : MonoBehaviour
         //Debug.Log(inputy.main.Camera.ReadValue<Vector2>());
 
         RaycastHit hit;
-
-        if(transform.localScale.y > 0.9999f || transform.localScale.y < 0.50001){
+        if((transform.localScale.y > 0.9999f && properSize == 1f) || (transform.localScale.y < 0.50001 && properSize == 0.5f)){
             transform.localScale = new Vector3(1f, properSize, 1f);
         }
-        if(properSize != transform.localScale.y && !Physics.Raycast(transform.position, transform.up, out hit, Mathf.Abs(properSize - transform.localScale.y))){
-            Debug.Log(hit.transform?.gameObject?.tag);
-            // var test1 = new Vector3(1f, properSize, 1f);
-            // transform.localScale = Vector3.Lerp(transform.localScale, test1, 20f * Time.deltaTime);
-            transform.localScale = new Vector3(1f, Mathf.SmoothStep(transform.localScale.y, properSize, 0.5f * Time.deltaTime), 1f);
+        if(properSize != transform.localScale.y && !Physics.Raycast(transform.position, transform.up, out hit, 1f)){
+            transform.localScale = new Vector3(1f, Mathf.SmoothStep(transform.localScale.y, properSize, 50f * Time.deltaTime), 1f);
         }
     }
     private void LateUpdate()
@@ -279,8 +276,8 @@ public class Run : MonoBehaviour
     }
 
     private void Jump() {
-        if(isGrounded){
-            myRb.AddForce(transform.up * jumpForce, ForceMode.Acceleration);
+        if(isGrounded || slope || climb){
+            myRb.AddForce(transform.up * jumpUpForce + transform.forward * jumpForwardForce, ForceMode.Force);
         }
     }
 
