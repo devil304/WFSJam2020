@@ -10,7 +10,7 @@ public class Run : MonoBehaviour
     [SerializeField, Range(0,100)] float CamSpeedY = 1, CamSpeedX = 1;
     [SerializeField] float minAngle, maxAngle, stickiness=5, targetSSpeed = 10, startSSpeed = 15, SspeedUpTime = 2, divider=44, timeToStopMiAir = 3, AirDragXZ = 2;
     Vector2 val = Vector2.zero;
-    Transform MyCamera, Camholder, rotator;
+    Transform MyCamera, Camholder, rotator, Gimbal;
     [SerializeField]bool climb, isGrounded, wasGrounded, slope;
     int CamCanc = 0;
     Coroutine SIActive;
@@ -24,7 +24,8 @@ public class Run : MonoBehaviour
     {
         Application.targetFrameRate = 0;
         Cursor.lockState = CursorLockMode.Locked;
-        MyCamera = transform.GetChild(0).GetChild(0).GetChild(0);
+        MyCamera = transform.GetChild(0).GetChild(0).GetChild(0).GetChild(0);
+        Gimbal = transform.GetChild(0).GetChild(0).GetChild(0);
         Camholder = transform.GetChild(0).GetChild(0);
         rotator = transform.GetChild(0);
 
@@ -85,7 +86,7 @@ public class Run : MonoBehaviour
     }
     Vector3 angles, lastVel;
     Vector2 MDelta;
-    float ClimbForce = 0;
+    [SerializeField]float ClimbForce = 0;
     private void Update()
     {
         if (!climb && !isGrounded && !slope)
@@ -114,7 +115,10 @@ public class Run : MonoBehaviour
         {
             MyCamera.localEulerAngles = angles;
             //Debug.Log(angles);
-            transform.Rotate(new Vector3(0, MDelta.x * (CamSpeedX), 0), Space.World);
+            if (!climb)
+                transform.Rotate(new Vector3(0, MDelta.x * (CamSpeedX), 0), Space.World);
+            else
+                Gimbal.Rotate(new Vector3(0, MDelta.x * (CamSpeedX), 0), Space.Self);
         }
         if (!climb)
             myRb.AddForce(transform.forward * val.y * speed * Time.deltaTime, ForceMode.Force);
@@ -124,18 +128,13 @@ public class Run : MonoBehaviour
             //Debug.Log(ClimbForce);
         }
         myRb.AddForce(transform.right * val.x * speed * Time.deltaTime, ForceMode.Force);
-        if ((climb||slope) && ClimbForce > 10)
-            ClimbForce -= (myRb.drag/2) * Time.deltaTime;
-        else
-        {
-            ClimbForce = 0;
-            //climb = false;
-        }
+        if ((climb||slope)&&((climb&&ClimbForce>0)||slope))
+            ClimbForce -= (AirDragXZ/(climb?0.06f:0.15f)) * Time.deltaTime;
         if(climb && isGrounded && !wasGrounded)
         {
             climb = false;
             StartCoroutine(RotateInTime(0, rotator, Space.Self, 0.2f));
-            StartCoroutine(RotateInTime(0, Camholder, Space.Self, 0.2f));
+            StartCoroutine(RotateInTime(0, Camholder, Space.Self, 0.2f, ResetRot));
         }
             
         //Debug.Log(inputy.main.Camera.ReadValue<Vector2>());
@@ -171,7 +170,7 @@ public class Run : MonoBehaviour
         if(collision.gameObject.CompareTag("Slope"))
         {
             slope = true;
-            ClimbForce = (lastVel.z / divider) - Physics.gravity.y;
+            ClimbForce = (Mathf.Abs(lastVel.z*lastVel.x) / divider) - Physics.gravity.y;
             StartCoroutine(InterpolateStick(startSSpeed,targetSSpeed,SspeedUpTime));
             //Debug.Log(lastVel);
         }
@@ -184,12 +183,13 @@ public class Run : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("wall") && climb)
         {
-            myRb.AddForce(transform.forward*ClimbForce*val.y, ForceMode.Force);
-            Debug.DrawRay(transform.position, transform.forward * ClimbForce);
+            myRb.AddForce(transform.forward*val.y*5, ForceMode.Force);
+            Debug.DrawRay(transform.position, transform.forward * val.y*5);
         }
         if (collision.gameObject.CompareTag("Slope"))
         {
-            myRb.AddForce(transform.forward * ClimbForce*val.y*stickiness, ForceMode.Force);
+            myRb.AddForce(Vector3.Cross(transform.right,collision.contacts[0].normal) * ClimbForce*val.y*stickiness, ForceMode.Force);
+            Debug.DrawRay(transform.position,Vector3.Cross(transform.right, collision.contacts[0].normal) * ClimbForce * val.y * stickiness);
         }
         if (collision.gameObject.CompareTag("Ground"))
             wasGrounded = true;
@@ -200,10 +200,11 @@ public class Run : MonoBehaviour
         if (collision.gameObject.CompareTag("wall"))
         {
             climb = false;
+            
             /*transform.localEulerAngles = Vector3.zero;
             Camholder.localEulerAngles = Vector3.zero;*/
             StartCoroutine(RotateInTime(0, rotator, Space.Self, 0.2f));
-            StartCoroutine(RotateInTime(0, Camholder, Space.Self, 0.2f));
+            StartCoroutine(RotateInTime(0, Camholder, Space.Self, 0.2f, ResetRot));
         }
         if (collision.gameObject.CompareTag("Slope"))
         {
@@ -245,7 +246,16 @@ public class Run : MonoBehaviour
         }
         stickiness = speedEnd;
     }
-    IEnumerator RotateInTime(float angle, Transform what, Space spaceType, float time, int axis=0)
+    void ResetRot()
+    {
+        if (Gimbal.localEulerAngles.y != 0)
+        {
+            transform.localEulerAngles += Vector3.up * Gimbal.localEulerAngles.y;
+            Gimbal.localEulerAngles -= Vector3.up * Gimbal.localEulerAngles.y;
+        }
+    }
+    delegate void OnTheEnd();
+    IEnumerator RotateInTime(float angle, Transform what, Space spaceType, float time, OnTheEnd RunOnFinish=null, int axis=0)
     {
         float timed =0;
         Vector3 actEuler = what.localEulerAngles;
@@ -269,10 +279,12 @@ public class Run : MonoBehaviour
         {
             timed += Time.deltaTime;
             //Debug.Log(timed);
-            what.localEulerAngles = Vector3.Lerp(actEuler, new Vector3(axis == 0 ? angle : 0, axis == 1 ? angle : 0, axis == 2 ? angle : 0), timed / time);
+            what.localEulerAngles = Vector3.Lerp(actEuler, new Vector3(axis == 0 ? angle : actEuler.x, axis == 1 ? angle : actEuler.y, axis == 2 ? angle : actEuler.z), timed / time);
             //Debug.Log(actEuler);
             yield return null;
         }
+        if (RunOnFinish != null)
+            RunOnFinish.Invoke();
     }
 
     private void Jump() {
