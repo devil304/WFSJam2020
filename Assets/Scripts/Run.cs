@@ -6,16 +6,18 @@ public class Run : MonoBehaviour
 {
     KlikKlik inputy;
     Rigidbody myRb;
-    [SerializeField] float speed = 10;
+    [SerializeField] float speed = 10, targetSpeed = 10, startSpeed = 15, speedUpTime = 2;
     [SerializeField, Range(0,100)] float CamSpeedY = 1, CamSpeedX = 1;
-    [SerializeField] float minAngle, maxAngle;
+    [SerializeField] float minAngle, maxAngle, stickiness=5, targetSSpeed = 10, startSSpeed = 15, SspeedUpTime = 2, divider=44, timeToStopMiAir = 3;
     Vector2 val = Vector2.zero;
     Transform MyCamera, Camholder, rotator;
-    [SerializeField]bool climb, isGrounded, wasGrounded;
+    [SerializeField]bool climb, isGrounded, wasGrounded, slope;
     int CamCanc = 0;
+    Coroutine SIActive;
 
     private void Start()
     {
+        Application.targetFrameRate = 0;
         Cursor.lockState = CursorLockMode.Locked;
         MyCamera = transform.GetChild(0).GetChild(0).GetChild(0);
         Camholder = transform.GetChild(0).GetChild(0);
@@ -26,17 +28,29 @@ public class Run : MonoBehaviour
         inputy.main.Enable();
         myRb = GetComponent<Rigidbody>();
         inputy.main.move.performed += v => {
+            if (val == Vector2.zero)
+            {
+                if (SIActive != null)
+                    StopCoroutine(SIActive);
+                SIActive = StartCoroutine(InterpolateSpeed(startSpeed, targetSpeed, speedUpTime));
+            }
             //Debug.Log("Why nufyn");
             val = v.ReadValue<Vector2>();
         };
         inputy.main.move.canceled += v => {
+            if (val == Vector2.zero)
+            {
+                if(SIActive!=null)
+                    StopCoroutine(SIActive);
+                SIActive = StartCoroutine(InterpolateSpeed(startSpeed, targetSpeed, speedUpTime));
+            }
             //Debug.Log("Why nufynC");
             val = v.ReadValue<Vector2>();
         };
         inputy.main.Camera.performed += v =>
         {
             MDelta = v.ReadValue<Vector2>();
-            angles = MyCamera.localEulerAngles+ new Vector3(-MDelta.y * (CamSpeedY)*Time.deltaTime, 0, 0);
+            angles = MyCamera.localEulerAngles+ new Vector3(-MDelta.y * (CamSpeedY), 0, 0);
             angles.x -= angles.x > 90 ? 360 : 0;
             if (angles.x < minAngle)
                 angles.x = minAngle;
@@ -55,21 +69,37 @@ public class Run : MonoBehaviour
     float ClimbForce = 0;
     private void Update()
     {
+        if (!climb && !isGrounded && !slope)
+        {
+            val = Vector2.zero;
+            myRb.velocity = Vector3.Lerp(myRb.velocity, Physics.gravity, Time.deltaTime / timeToStopMiAir);
+            //Debug.Log(myRb.velocity);
+        }
+        else if (val == Vector2.zero)
+        {
+            val = inputy.main.move.ReadValue<Vector2>();
+            if (val != Vector2.zero)
+            {
+                if (SIActive != null)
+                    StopCoroutine(SIActive);
+                SIActive = StartCoroutine(InterpolateSpeed(startSpeed, targetSpeed, speedUpTime));
+            }
+        }
         if (MDelta!=Vector2.zero)
         {
             MyCamera.localEulerAngles = angles;
             //Debug.Log(angles);
-            transform.Rotate(new Vector3(0, MDelta.x * (CamSpeedX) * Time.deltaTime, 0), Space.World);
+            transform.Rotate(new Vector3(0, MDelta.x * (CamSpeedX), 0), Space.World);
         }
         if (!climb)
             myRb.AddForce(transform.forward * val.y * speed * Time.deltaTime, ForceMode.Force);
         else
         {
-            myRb.AddForce(transform.up * ClimbForce, ForceMode.Force);
+            myRb.AddForce(transform.up * ClimbForce * val.y, ForceMode.Force);
             //Debug.Log(ClimbForce);
         }
         myRb.AddForce(transform.right * val.x * speed * Time.deltaTime, ForceMode.Force);
-        if (climb && ClimbForce > 10)
+        if ((climb||slope) && ClimbForce > 10)
             ClimbForce -= (myRb.drag/2) * Time.deltaTime;
         else
         {
@@ -102,22 +132,34 @@ public class Run : MonoBehaviour
         if (collision.gameObject.CompareTag("wall"))
         {
             climb = true;
-            ClimbForce = (lastVel.z/44) - Physics.gravity.y;
-            StartCoroutine(RotateInTime(-45, rotator, Space.Self, 0.35f));
-            StartCoroutine(RotateInTime(45 * 0.9f, Camholder, Space.Self, 0.35f));
+            ClimbForce = (lastVel.z/divider) - Physics.gravity.y;
             //Debug.Log(lastVel);
         }
-        if(collision.gameObject.CompareTag("Ground"))
+        if(collision.gameObject.CompareTag("Slope"))
+        {
+            slope = true;
+            ClimbForce = (lastVel.z / divider) - Physics.gravity.y;
+            StartCoroutine(InterpolateStick(startSSpeed,targetSSpeed,SspeedUpTime));
+            //Debug.Log(lastVel);
+        }
+        if (collision.gameObject.CompareTag("Ground"))
         {
             isGrounded=true;
         }
     }
     private void OnCollisionStay(Collision collision)
     {
-        if (collision.gameObject.CompareTag("Ground"))
+        if (collision.gameObject.CompareTag("wall") && climb)
         {
-            wasGrounded = true;
+            myRb.AddForce(transform.forward*ClimbForce*val.y, ForceMode.Force);
+            Debug.DrawRay(transform.position, transform.forward * ClimbForce);
         }
+        if (collision.gameObject.CompareTag("Slope"))
+        {
+            myRb.AddForce(transform.forward * ClimbForce*val.y*stickiness, ForceMode.Force);
+        }
+        if (collision.gameObject.CompareTag("Ground"))
+            wasGrounded = true;
     }
 
     private void OnCollisionExit(Collision collision)
@@ -130,11 +172,45 @@ public class Run : MonoBehaviour
             StartCoroutine(RotateInTime(0, rotator, Space.Self, 0.2f));
             StartCoroutine(RotateInTime(0, Camholder, Space.Self, 0.2f));
         }
+        if (collision.gameObject.CompareTag("Slope"))
+        {
+            slope = false;
+        }
         if (collision.gameObject.CompareTag("Ground"))
         {
             isGrounded = false;
             wasGrounded = false;
+            if (climb)
+            {
+                StartCoroutine(RotateInTime(-45, rotator, Space.Self, 0.25f));
+                StartCoroutine(RotateInTime(45 * 0.9f, Camholder, Space.Self, 0.25f));
+            }
         }
+    }
+    IEnumerator InterpolateSpeed(float speedStart, float speedEnd, float time)
+    {
+        float timed = 0;
+        speed = speedStart;
+        while (timed < time)
+        {
+            timed += Time.deltaTime;
+            speed = Mathf.SmoothStep(speedStart, speedEnd, timed / time);
+            yield return null;
+        }
+        speed = speedEnd;
+    }
+
+    IEnumerator InterpolateStick(float speedStart, float speedEnd, float time)
+    {
+        float timed = 0;
+        stickiness = speedStart;
+        while (timed < time)
+        {
+            timed += Time.deltaTime;
+            stickiness = Mathf.SmoothStep(speedStart, speedEnd, timed / time);
+            yield return null;
+        }
+        stickiness = speedEnd;
     }
     IEnumerator RotateInTime(float angle, Transform what, Space spaceType, float time, int axis=0)
     {
@@ -156,14 +232,12 @@ public class Run : MonoBehaviour
                     break;
             }
         }
-        while (true)
+        while (timed < time)
         {
             timed += Time.deltaTime;
-            Debug.Log(timed);
+            //Debug.Log(timed);
             what.localEulerAngles = Vector3.Lerp(actEuler, new Vector3(axis == 0 ? angle : 0, axis == 1 ? angle : 0, axis == 2 ? angle : 0), timed / time);
             //Debug.Log(actEuler);
-            if (timed >= time)
-                break;
             yield return null;
         }
     }
