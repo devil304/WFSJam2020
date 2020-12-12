@@ -19,6 +19,7 @@ public class Run : MonoBehaviour
     [SerializeField] float jumpForwardForce = 250;
     [SerializeField] float slideSize = 0.5f;
     private float properSize = 1f;
+    public int powerUps = 0;
     private bool isSliding = false;
 
     private void Start()
@@ -96,16 +97,25 @@ public class Run : MonoBehaviour
         };
         inputy.main.Hook.started += v =>
         {
-            RaycastHit hit;
-            if (Physics.Raycast(MyCamera.position, MyCamera.forward, out hit, 64))
+            if (powerUps > 0)
             {
-                myRb.AddForce(MyCamera.forward*32,ForceMode.Impulse);
+                RaycastHit hit;
+                if (Physics.Raycast(MyCamera.position, MyCamera.forward, out hit, 64))
+                {
+                    myRb.AddForce(MyCamera.forward * 32, ForceMode.Impulse);
+                }
+                powerUps--;
             }
         };
     }
     Vector3 angles, lastVel;
     Vector2 MDelta;
     [SerializeField]float ClimbForce = 0;
+
+    public void addPowerUP(int ile = 1)
+    {
+        powerUps += ile;
+    }
     private void Update()
     {
         /*if (!climb && !isGrounded && !slope)
