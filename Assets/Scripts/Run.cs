@@ -72,7 +72,7 @@ public class Run : MonoBehaviour
             var direction = v.ReadValue<float>();
             if(direction == -1) {
                 Slide(slideSize);
-            } else if(myRb.velocity.y == 0) {
+            } else {
                 Jump();
             }
         };
@@ -273,12 +273,9 @@ public class Run : MonoBehaviour
     }
 
     private void Jump() {
-        RaycastHit hit;
-        if(Physics.Raycast(transform.position, Vector3.down, out hit, 20f)){
-            Debug.Log(hit.transform.name);
-            myRb.AddForce(transform.up * jumpForce, ForceMode.Force);
+        if(isGrounded){
+            myRb.AddForce(transform.up * jumpForce, ForceMode.Acceleration);
         }
-        Debug.Log("Jump");
     }
 
     private void Slide(float size) {
