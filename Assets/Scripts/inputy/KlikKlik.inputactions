@@ -14,7 +14,7 @@
                     "interactions": ""
                 },
                 {
-                    "name": "JumpSlide",
+                    "name": "Jump",
                     "type": "Button",
                     "id": "a63be762-eba2-450f-8afc-2b5b4bb6aba4",
                     "expectedControlType": "Button",
@@ -33,6 +33,14 @@
                     "name": "Hook",
                     "type": "Button",
                     "id": "3103f6a7-bc85-4422-984a-3b778eb641fb",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": ""
+                },
+                {
+                    "name": "Slide",
+                    "type": "Button",
+                    "id": "36d1fd21-9944-4059-83d1-28bb8b44b310",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": ""
@@ -95,39 +103,6 @@
                     "isPartOfComposite": true
                 },
                 {
-                    "name": "1D Axis",
-                    "id": "96dca5ed-50ff-4e53-9a81-ebb62146996e",
-                    "path": "1DAxis",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "JumpSlide",
-                    "isComposite": true,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "negative",
-                    "id": "731dd984-61d8-4132-9002-c3720124e28f",
-                    "path": "<Keyboard>/ctrl",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "JumpSlide",
-                    "isComposite": false,
-                    "isPartOfComposite": true
-                },
-                {
-                    "name": "positive",
-                    "id": "65931211-d1d8-493e-82dd-2e2c21bd06e6",
-                    "path": "<Keyboard>/space",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "JumpSlide",
-                    "isComposite": false,
-                    "isPartOfComposite": true
-                },
-                {
                     "name": "",
                     "id": "c51d582b-fec3-4b9f-82e0-f6f5733c00c5",
                     "path": "<Mouse>/delta",
@@ -146,6 +121,28 @@
                     "processors": "",
                     "groups": "",
                     "action": "Hook",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a3876cd7-4c86-41df-b1f3-a5ba29edf641",
+                    "path": "<Keyboard>/ctrl",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Slide",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "00769218-9c2d-4b2e-a585-4a8d437bf3e5",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Jump",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

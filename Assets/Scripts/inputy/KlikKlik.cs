@@ -27,7 +27,7 @@ public class @KlikKlik : IInputActionCollection, IDisposable
                     ""interactions"": """"
                 },
                 {
-                    ""name"": ""JumpSlide"",
+                    ""name"": ""Jump"",
                     ""type"": ""Button"",
                     ""id"": ""a63be762-eba2-450f-8afc-2b5b4bb6aba4"",
                     ""expectedControlType"": ""Button"",
@@ -46,6 +46,14 @@ public class @KlikKlik : IInputActionCollection, IDisposable
                     ""name"": ""Hook"",
                     ""type"": ""Button"",
                     ""id"": ""3103f6a7-bc85-4422-984a-3b778eb641fb"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
+                },
+                {
+                    ""name"": ""Slide"",
+                    ""type"": ""Button"",
+                    ""id"": ""36d1fd21-9944-4059-83d1-28bb8b44b310"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """"
@@ -108,39 +116,6 @@ public class @KlikKlik : IInputActionCollection, IDisposable
                     ""isPartOfComposite"": true
                 },
                 {
-                    ""name"": ""1D Axis"",
-                    ""id"": ""96dca5ed-50ff-4e53-9a81-ebb62146996e"",
-                    ""path"": ""1DAxis"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""JumpSlide"",
-                    ""isComposite"": true,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": ""negative"",
-                    ""id"": ""731dd984-61d8-4132-9002-c3720124e28f"",
-                    ""path"": ""<Keyboard>/ctrl"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""JumpSlide"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": true
-                },
-                {
-                    ""name"": ""positive"",
-                    ""id"": ""65931211-d1d8-493e-82dd-2e2c21bd06e6"",
-                    ""path"": ""<Keyboard>/space"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""JumpSlide"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": true
-                },
-                {
                     ""name"": """",
                     ""id"": ""c51d582b-fec3-4b9f-82e0-f6f5733c00c5"",
                     ""path"": ""<Mouse>/delta"",
@@ -161,6 +136,28 @@ public class @KlikKlik : IInputActionCollection, IDisposable
                     ""action"": ""Hook"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""a3876cd7-4c86-41df-b1f3-a5ba29edf641"",
+                    ""path"": ""<Keyboard>/ctrl"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Slide"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""00769218-9c2d-4b2e-a585-4a8d437bf3e5"",
+                    ""path"": ""<Keyboard>/space"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Jump"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -170,9 +167,10 @@ public class @KlikKlik : IInputActionCollection, IDisposable
         // main
         m_main = asset.FindActionMap("main", throwIfNotFound: true);
         m_main_move = m_main.FindAction("move", throwIfNotFound: true);
-        m_main_JumpSlide = m_main.FindAction("JumpSlide", throwIfNotFound: true);
+        m_main_Jump = m_main.FindAction("Jump", throwIfNotFound: true);
         m_main_Camera = m_main.FindAction("Camera", throwIfNotFound: true);
         m_main_Hook = m_main.FindAction("Hook", throwIfNotFound: true);
+        m_main_Slide = m_main.FindAction("Slide", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -223,17 +221,19 @@ public class @KlikKlik : IInputActionCollection, IDisposable
     private readonly InputActionMap m_main;
     private IMainActions m_MainActionsCallbackInterface;
     private readonly InputAction m_main_move;
-    private readonly InputAction m_main_JumpSlide;
+    private readonly InputAction m_main_Jump;
     private readonly InputAction m_main_Camera;
     private readonly InputAction m_main_Hook;
+    private readonly InputAction m_main_Slide;
     public struct MainActions
     {
         private @KlikKlik m_Wrapper;
         public MainActions(@KlikKlik wrapper) { m_Wrapper = wrapper; }
         public InputAction @move => m_Wrapper.m_main_move;
-        public InputAction @JumpSlide => m_Wrapper.m_main_JumpSlide;
+        public InputAction @Jump => m_Wrapper.m_main_Jump;
         public InputAction @Camera => m_Wrapper.m_main_Camera;
         public InputAction @Hook => m_Wrapper.m_main_Hook;
+        public InputAction @Slide => m_Wrapper.m_main_Slide;
         public InputActionMap Get() { return m_Wrapper.m_main; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -246,15 +246,18 @@ public class @KlikKlik : IInputActionCollection, IDisposable
                 @move.started -= m_Wrapper.m_MainActionsCallbackInterface.OnMove;
                 @move.performed -= m_Wrapper.m_MainActionsCallbackInterface.OnMove;
                 @move.canceled -= m_Wrapper.m_MainActionsCallbackInterface.OnMove;
-                @JumpSlide.started -= m_Wrapper.m_MainActionsCallbackInterface.OnJumpSlide;
-                @JumpSlide.performed -= m_Wrapper.m_MainActionsCallbackInterface.OnJumpSlide;
-                @JumpSlide.canceled -= m_Wrapper.m_MainActionsCallbackInterface.OnJumpSlide;
+                @Jump.started -= m_Wrapper.m_MainActionsCallbackInterface.OnJump;
+                @Jump.performed -= m_Wrapper.m_MainActionsCallbackInterface.OnJump;
+                @Jump.canceled -= m_Wrapper.m_MainActionsCallbackInterface.OnJump;
                 @Camera.started -= m_Wrapper.m_MainActionsCallbackInterface.OnCamera;
                 @Camera.performed -= m_Wrapper.m_MainActionsCallbackInterface.OnCamera;
                 @Camera.canceled -= m_Wrapper.m_MainActionsCallbackInterface.OnCamera;
                 @Hook.started -= m_Wrapper.m_MainActionsCallbackInterface.OnHook;
                 @Hook.performed -= m_Wrapper.m_MainActionsCallbackInterface.OnHook;
                 @Hook.canceled -= m_Wrapper.m_MainActionsCallbackInterface.OnHook;
+                @Slide.started -= m_Wrapper.m_MainActionsCallbackInterface.OnSlide;
+                @Slide.performed -= m_Wrapper.m_MainActionsCallbackInterface.OnSlide;
+                @Slide.canceled -= m_Wrapper.m_MainActionsCallbackInterface.OnSlide;
             }
             m_Wrapper.m_MainActionsCallbackInterface = instance;
             if (instance != null)
@@ -262,15 +265,18 @@ public class @KlikKlik : IInputActionCollection, IDisposable
                 @move.started += instance.OnMove;
                 @move.performed += instance.OnMove;
                 @move.canceled += instance.OnMove;
-                @JumpSlide.started += instance.OnJumpSlide;
-                @JumpSlide.performed += instance.OnJumpSlide;
-                @JumpSlide.canceled += instance.OnJumpSlide;
+                @Jump.started += instance.OnJump;
+                @Jump.performed += instance.OnJump;
+                @Jump.canceled += instance.OnJump;
                 @Camera.started += instance.OnCamera;
                 @Camera.performed += instance.OnCamera;
                 @Camera.canceled += instance.OnCamera;
                 @Hook.started += instance.OnHook;
                 @Hook.performed += instance.OnHook;
                 @Hook.canceled += instance.OnHook;
+                @Slide.started += instance.OnSlide;
+                @Slide.performed += instance.OnSlide;
+                @Slide.canceled += instance.OnSlide;
             }
         }
     }
@@ -278,8 +284,9 @@ public class @KlikKlik : IInputActionCollection, IDisposable
     public interface IMainActions
     {
         void OnMove(InputAction.CallbackContext context);
-        void OnJumpSlide(InputAction.CallbackContext context);
+        void OnJump(InputAction.CallbackContext context);
         void OnCamera(InputAction.CallbackContext context);
         void OnHook(InputAction.CallbackContext context);
+        void OnSlide(InputAction.CallbackContext context);
     }
 }

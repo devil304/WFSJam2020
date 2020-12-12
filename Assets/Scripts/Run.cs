@@ -44,7 +44,7 @@ public class Run : MonoBehaviour
             }
             //Debug.Log("Why nufyn");
             val = v.ReadValue<Vector2>();
-            if (!climb && !isGrounded && !slope)
+            if (!climb && !isGrounded && !slope || isSliding)
             {
                 val /= divider3;
                 //Debug.Log(val);
@@ -59,7 +59,7 @@ public class Run : MonoBehaviour
             }
             //Debug.Log("Why nufynC");
             val = v.ReadValue<Vector2>();
-            if (!climb && !isGrounded && !slope)
+            if (!climb && !isGrounded && !slope || isSliding)
             {
                 val /= divider3;
                 //Debug.Log(val);
@@ -82,17 +82,14 @@ public class Run : MonoBehaviour
             CamCanc = 1;
         };
 
-        inputy.main.JumpSlide.performed += v => {
-            var direction = v.ReadValue<float>();
-            if(direction == -1) {
-                Slide(slideSize);
-            } else {
-                Jump();
-            }
+        inputy.main.Jump.performed += v => {
+            Jump();
+        };
+        inputy.main.Slide.performed += v => {
+            Slide(.5f);
         };
 
-        inputy.main.JumpSlide.canceled += v => {
-            var direction = v.ReadValue<float>();
+        inputy.main.Slide.canceled += v => {
             Slide(1f);
         };
         inputy.main.Hook.started += v =>
@@ -148,7 +145,7 @@ public class Run : MonoBehaviour
             else
                 Gimbal.Rotate(new Vector3(0, MDelta.x * (CamSpeedX), 0), Space.Self);
         }
-        if (!climb && !isSliding && !slope)
+        if (!climb && !slope)
             myRb.AddForce(transform.forward * val.y * speed * Time.deltaTime, ForceMode.Force);
         else if (slope)
         {
@@ -176,7 +173,7 @@ public class Run : MonoBehaviour
             transform.localScale = new Vector3(1f, properSize, 1f);
         }
         if(properSize != transform.localScale.y && !Physics.Raycast(transform.position, transform.up, 1.5f)){
-            transform.localScale = new Vector3(1f, Mathf.SmoothStep(transform.localScale.y, properSize, 50f * Time.deltaTime), 1f);
+            transform.localScale = new Vector3(1f, Mathf.SmoothStep(transform.localScale.y, properSize, 25f * Time.deltaTime), 1f);
         }
         if (!climb && !isGrounded && !slope)
         {
