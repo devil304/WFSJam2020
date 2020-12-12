@@ -97,13 +97,10 @@ public class Run : MonoBehaviour
         };
         inputy.main.Hook.started += v =>
         {
-            if (powerUps > 0)
+            RaycastHit hit;
+            if (powerUps > 0 && Physics.Raycast(MyCamera.position, MyCamera.forward, out hit, 64))
             {
-                RaycastHit hit;
-                if (Physics.Raycast(MyCamera.position, MyCamera.forward, out hit, 64))
-                {
-                    myRb.AddForce(MyCamera.forward * 32, ForceMode.Impulse);
-                }
+                myRb.AddForce(MyCamera.forward * 32, ForceMode.Impulse);
                 powerUps--;
             }
         };
@@ -209,24 +206,15 @@ public class Run : MonoBehaviour
         lastVel = myRb.velocity!=Vector3.zero?myRb.velocity:lastVel;
     }
 
+    List<ContactPoint> contactPoints = new List<ContactPoint>();
+    List<int> contactId = new List<int>();
+
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.CompareTag("wall"))
-        {
-            climb = true;
-            ClimbForce = (lastVel.z/divider) - Physics.gravity.y;
-            //Debug.Log(lastVel);
-        }
-        if(collision.gameObject.CompareTag("Slope"))
-        {
-            slope = true;
-            slopeC = collision;
-            ClimbForce = (Mathf.Abs(lastVel.z*lastVel.x) / divider2) - Physics.gravity.y;
-            StartCoroutine(InterpolateStick(startSSpeed,targetSSpeed,SspeedUpTime));
-            //Debug.Log(lastVel);
-        }
-        if (collision.gameObject.CompareTag("Ground"))
-        {
+        var angle = Vector3.SignedAngle(collision.contacts[0].normal, Vector3.up, Vector3.forward);
+        Debug.Log(angle);
+        Debug.Log(angle <= 16.0f);
+        if(angle >= 0.0f && angle <= 16.0f){
             isGrounded=true;
             ClimbForce = 0;
             if (!wasGrounded)
@@ -234,43 +222,47 @@ public class Run : MonoBehaviour
                 slope = false;
                 climb = false;
             }
+            contactPoints.Add(collision.contacts[0]);
+            contactId.Add(collision.gameObject.GetInstanceID());
+        } else if(angle > 16.0f && angle < 70.0f) {
+            slope = true;
+            slopeC = collision;
+            ClimbForce = (Mathf.Abs(lastVel.z*lastVel.x) / divider2) - Physics.gravity.y;
+            StartCoroutine(InterpolateStick(startSSpeed,targetSSpeed,SspeedUpTime));
+            contactPoints.Add(collision.contacts[0]);
+            contactId.Add(collision.gameObject.GetInstanceID());
+        } else {
+            climb = true;
+            ClimbForce = (lastVel.z/divider) - Physics.gravity.y;
+            contactPoints.Add(collision.contacts[0]);
+            contactId.Add(collision.gameObject.GetInstanceID());
         }
     }
     Collision slopeC;
+
     private void OnCollisionStay(Collision collision)
     {
-        if (collision.gameObject.CompareTag("wall") && climb)
-        {
-            myRb.AddForce(transform.forward*val.y*5, ForceMode.Force);
-            Debug.DrawRay(transform.position, transform.forward * val.y*5);
-        }
-        if (collision.gameObject.CompareTag("Slope"))
-        {
+        var angle = Vector3.SignedAngle(collision.contacts[0].normal, Vector3.up, Vector3.forward);
+        if(angle >= 0f && angle <= 16f){
+            wasGrounded = true;
+            isGrounded = true;
+        } else if(angle > 16f && angle < 70f) {
             slopeC = collision;
             myRb.AddForce(Vector3.Cross(transform.right,collision.contacts[0].normal) * ClimbForce*val.y*stickiness, ForceMode.Force);
             Debug.DrawRay(transform.position,Vector3.Cross(transform.right, collision.contacts[0].normal) * ClimbForce * val.y * stickiness);
+
+        } else {
+            myRb.AddForce(transform.forward*val.y*5, ForceMode.Force);
+            Debug.DrawRay(transform.position, transform.forward * val.y*5);
         }
-        if (collision.gameObject.CompareTag("Ground"))
-            wasGrounded = true;
     }
 
     private void OnCollisionExit(Collision collision)
     {
-        if (collision.gameObject.CompareTag("wall"))
-        {
-            climb = false;
-            
-            /*transform.localEulerAngles = Vector3.zero;
-            Camholder.localEulerAngles = Vector3.zero;*/
-            StartCoroutine(RotateInTime(0, rotator, Space.Self, 0.2f));
-            StartCoroutine(RotateInTime(0, Camholder, Space.Self, 0.2f, ResetRot));
-        }
-        if (collision.gameObject.CompareTag("Slope"))
-        {
-            slope = false;
-        }
-        if (collision.gameObject.CompareTag("Ground"))
-        {
+        var collisionIndex = contactId.FindIndex((x) =>  x == collision.gameObject.GetInstanceID());
+        var contactPoint = contactPoints[collisionIndex];
+        var angle = Vector3.SignedAngle(contactPoint.normal, Vector3.up, Vector3.forward);
+        if(angle >= 0f && angle <= 16f){
             isGrounded = false;
             wasGrounded = false;
             if (climb)
@@ -278,6 +270,22 @@ public class Run : MonoBehaviour
                 StartCoroutine(RotateInTime(-45, rotator, Space.Self, 0.25f));
                 StartCoroutine(RotateInTime(45 * 0.9f, Camholder, Space.Self, 0.25f));
             }
+            contactPoints.RemoveAt(collisionIndex);
+            contactId.RemoveAt(collisionIndex);
+        } else if(angle > 16f && angle < 70f) {
+            slope = false;
+            contactPoints.RemoveAt(collisionIndex);
+            contactId.RemoveAt(collisionIndex);
+
+        } else {
+            climb = false;
+            
+            /*transform.localEulerAngles = Vector3.zero;
+            Camholder.localEulerAngles = Vector3.zero;*/
+            StartCoroutine(RotateInTime(0, rotator, Space.Self, 0.2f));
+            StartCoroutine(RotateInTime(0, Camholder, Space.Self, 0.2f, ResetRot));
+            contactPoints.RemoveAt(collisionIndex);
+            contactId.RemoveAt(collisionIndex);
         }
     }
     IEnumerator InterpolateSpeed(float speedStart, float speedEnd, float time)
