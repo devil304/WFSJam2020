@@ -289,11 +289,18 @@ public class Run : MonoBehaviour
 
     private void Jump() {
         if(isGrounded || slope || climb){
-            myRb.AddForce(transform.up * jumpUpForce + transform.forward * jumpForwardForce, ForceMode.Force);
+            myRb.AddForce(transform.up * jumpUpForce + MyCamera.forward * jumpForwardForce, ForceMode.Force);
         }
     }
 
     private void Slide(float size) {
         properSize = size;
+        if(size == .5f){
+            myRb.mass = .5f;
+            myRb.drag = .5f;
+        } else {
+            myRb.mass = 1f;
+            myRb.drag = 0f;
+        }
     }
 }
