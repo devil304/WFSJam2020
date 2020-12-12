@@ -83,6 +83,14 @@ public class Run : MonoBehaviour
             var direction = v.ReadValue<float>();
             Slide(1f);
         };
+        inputy.main.Hook.started += v =>
+        {
+            RaycastHit hit;
+            if (Physics.Raycast(MyCamera.position, MyCamera.forward, out hit, 64))
+            {
+                myRb.AddForce(MyCamera.forward*32,ForceMode.Impulse);
+            }
+        };
     }
     Vector3 angles, lastVel;
     Vector2 MDelta;
