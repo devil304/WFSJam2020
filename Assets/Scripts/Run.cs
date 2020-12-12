@@ -19,6 +19,7 @@ public class Run : MonoBehaviour
     [SerializeField] float jumpForwardForce = 1;
     [SerializeField] float slideSize = 0.5f;
     private float properSize = 1f;
+    private bool isSliding = false;
 
     private void Start()
     {
@@ -128,7 +129,7 @@ public class Run : MonoBehaviour
             else
                 Gimbal.Rotate(new Vector3(0, MDelta.x * (CamSpeedX), 0), Space.Self);
         }
-        if (!climb)
+        if (!climb && !isSliding)
             myRb.AddForce(transform.forward * val.y * speed * Time.deltaTime, ForceMode.Force);
         else
         {
@@ -148,10 +149,10 @@ public class Run : MonoBehaviour
         //Debug.Log(inputy.main.Camera.ReadValue<Vector2>());
 
         RaycastHit hit;
-        if((transform.localScale.y > 0.9999f && properSize == 1f) || (transform.localScale.y < 0.50001 && properSize == 0.5f)){
+        if((transform.localScale.y > 0.99f && properSize == 1f) || (transform.localScale.y < 0.501 && properSize == 0.5f)){
             transform.localScale = new Vector3(1f, properSize, 1f);
         }
-        if(properSize != transform.localScale.y && !Physics.Raycast(transform.position, transform.up, out hit, 1f)){
+        if(properSize != transform.localScale.y && !Physics.Raycast(transform.position, transform.up, 1.5f)){
             transform.localScale = new Vector3(1f, Mathf.SmoothStep(transform.localScale.y, properSize, 50f * Time.deltaTime), 1f);
         }
     }
@@ -305,10 +306,11 @@ public class Run : MonoBehaviour
         properSize = size;
         if(size == .5f){
             myRb.mass = .5f;
-            myRb.drag = .5f;
+            isSliding = true;
+            myRb.AddForce(MyCamera.forward * jumpForwardForce, ForceMode.Force);
         } else {
             myRb.mass = 1f;
-            myRb.drag = 0f;
+            isSliding = false;
         }
     }
 }
