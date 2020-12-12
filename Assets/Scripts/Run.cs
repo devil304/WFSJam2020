@@ -8,7 +8,7 @@ public class Run : MonoBehaviour
     Rigidbody myRb;
     [SerializeField] float speed = 10, targetSpeed = 10, startSpeed = 15, speedUpTime = 2;
     [SerializeField, Range(0,100)] float CamSpeedY = 1, CamSpeedX = 1;
-    [SerializeField] float minAngle, maxAngle, stickiness=5, targetSSpeed = 10, startSSpeed = 15, SspeedUpTime = 2, divider=44, timeToStopMiAir = 3, AirDragXZ = 2;
+    [SerializeField] float minAngle, maxAngle, stickiness=5, targetSSpeed = 10, startSSpeed = 15, SspeedUpTime = 2, divider=44, divider2=44, divider3 = 3, timeToStopMiAir = 3, AirDragXZ = 2, maxVelocity = 15;
     Vector2 val = Vector2.zero;
     Transform MyCamera, Camholder, rotator, Gimbal;
     [SerializeField]bool climb, isGrounded, wasGrounded, slope;
@@ -43,6 +43,11 @@ public class Run : MonoBehaviour
             }
             //Debug.Log("Why nufyn");
             val = v.ReadValue<Vector2>();
+            if (!climb && !isGrounded && !slope)
+            {
+                val /= divider3;
+                //Debug.Log(val);
+            }
         };
         inputy.main.move.canceled += v => {
             if (val == Vector2.zero)
@@ -53,6 +58,11 @@ public class Run : MonoBehaviour
             }
             //Debug.Log("Why nufynC");
             val = v.ReadValue<Vector2>();
+            if (!climb && !isGrounded && !slope)
+            {
+                val /= divider3;
+                //Debug.Log(val);
+            }
         };
         inputy.main.Camera.performed += v =>
         {
@@ -98,7 +108,7 @@ public class Run : MonoBehaviour
     [SerializeField]float ClimbForce = 0;
     private void Update()
     {
-        if (!climb && !isGrounded && !slope)
+        /*if (!climb && !isGrounded && !slope)
         {
             val = Vector2.zero;
             //myRb.velocity = Vector3.Lerp(myRb.velocity, Physics.gravity, Time.deltaTime / timeToStopMiAir);
@@ -110,7 +120,7 @@ public class Run : MonoBehaviour
             myRb.velocity = transform.TransformDirection(vel);
             //Debug.Log(myRb.velocity);
         }
-        else if (val == Vector2.zero)
+        else */if (val == Vector2.zero)
         {
             val = inputy.main.move.ReadValue<Vector2>();
             if (val != Vector2.zero)
@@ -119,7 +129,9 @@ public class Run : MonoBehaviour
                     StopCoroutine(SIActive);
                 SIActive = StartCoroutine(InterpolateSpeed(startSpeed, targetSpeed, speedUpTime));
             }
+            //Debug.Log(val);
         }
+        
         if (MDelta!=Vector2.zero)
         {
             MyCamera.localEulerAngles = angles;
@@ -129,16 +141,20 @@ public class Run : MonoBehaviour
             else
                 Gimbal.Rotate(new Vector3(0, MDelta.x * (CamSpeedX), 0), Space.Self);
         }
-        if (!climb && !isSliding)
+        if (!climb && !isSliding && !slope)
             myRb.AddForce(transform.forward * val.y * speed * Time.deltaTime, ForceMode.Force);
+        else if (slope)
+        {
+            myRb.AddForce(Vector3.Cross(transform.right, slopeC.contacts[0].normal) * ClimbForce * val.y * stickiness, ForceMode.Force);
+        }
         else
         {
             myRb.AddForce(transform.up * ClimbForce * val.y, ForceMode.Force);
             //Debug.Log(ClimbForce);
         }
         myRb.AddForce(transform.right * val.x * speed * Time.deltaTime, ForceMode.Force);
-        if ((climb||slope)&&((climb&&ClimbForce>0)||slope))
-            ClimbForce -= (AirDragXZ/(climb?0.06f:0.15f)) * Time.deltaTime;
+        if ((climb||slope)&&ClimbForce>0)
+            ClimbForce -= (AirDragXZ/(climb?0.015f:0.15f)) * Time.deltaTime;
         if(climb && isGrounded && !wasGrounded)
         {
             climb = false;
@@ -148,12 +164,27 @@ public class Run : MonoBehaviour
             
         //Debug.Log(inputy.main.Camera.ReadValue<Vector2>());
 
-        RaycastHit hit;
+        //RaycastHit hit;
         if((transform.localScale.y > 0.99f && properSize == 1f) || (transform.localScale.y < 0.501 && properSize == 0.5f)){
             transform.localScale = new Vector3(1f, properSize, 1f);
         }
         if(properSize != transform.localScale.y && !Physics.Raycast(transform.position, transform.up, 1.5f)){
             transform.localScale = new Vector3(1f, Mathf.SmoothStep(transform.localScale.y, properSize, 50f * Time.deltaTime), 1f);
+        }
+        if (!climb && !isGrounded && !slope)
+        {
+            Vector3 vel = myRb.velocity;
+            vel.x *= AirDragXZ;
+            vel.z *= AirDragXZ;
+            myRb.velocity = vel;
+        }
+        if (myRb.velocity.magnitude > maxVelocity)
+        {
+            Vector3 vel = myRb.velocity;
+            vel.x *= maxVelocity / myRb.velocity.magnitude;
+            vel.z *= maxVelocity / myRb.velocity.magnitude;
+            vel.y *= vel.y > 0 ? maxVelocity / myRb.velocity.magnitude :1;
+            myRb.velocity = vel;
         }
     }
     private void LateUpdate()
@@ -179,15 +210,23 @@ public class Run : MonoBehaviour
         if(collision.gameObject.CompareTag("Slope"))
         {
             slope = true;
-            ClimbForce = (Mathf.Abs(lastVel.z*lastVel.x) / divider) - Physics.gravity.y;
+            slopeC = collision;
+            ClimbForce = (Mathf.Abs(lastVel.z*lastVel.x) / divider2) - Physics.gravity.y;
             StartCoroutine(InterpolateStick(startSSpeed,targetSSpeed,SspeedUpTime));
             //Debug.Log(lastVel);
         }
         if (collision.gameObject.CompareTag("Ground"))
         {
             isGrounded=true;
+            ClimbForce = 0;
+            if (!wasGrounded)
+            {
+                slope = false;
+                climb = false;
+            }
         }
     }
+    Collision slopeC;
     private void OnCollisionStay(Collision collision)
     {
         if (collision.gameObject.CompareTag("wall") && climb)
@@ -197,6 +236,7 @@ public class Run : MonoBehaviour
         }
         if (collision.gameObject.CompareTag("Slope"))
         {
+            slopeC = collision;
             myRb.AddForce(Vector3.Cross(transform.right,collision.contacts[0].normal) * ClimbForce*val.y*stickiness, ForceMode.Force);
             Debug.DrawRay(transform.position,Vector3.Cross(transform.right, collision.contacts[0].normal) * ClimbForce * val.y * stickiness);
         }
