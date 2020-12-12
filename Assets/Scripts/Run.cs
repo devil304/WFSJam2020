@@ -18,6 +18,9 @@ public class Run : MonoBehaviour
     [SerializeField] float jumpUpForce = 500;
     [SerializeField] float jumpForwardForce = 250;
     [SerializeField] float slideSize = 0.5f;
+    [SerializeField] AudioClip[] steps;
+    [SerializeField] AudioClip slide;
+    [SerializeField] AudioSource SFX;
     private float properSize = 1f;
     public int powerUps = 0;
     private bool isSliding = false;
@@ -193,6 +196,39 @@ public class Run : MonoBehaviour
             vel.y *= vel.y > 0 ? maxVelocity / myRb.velocity.magnitude :1;
             myRb.velocity = vel;
         }
+        if ((myRb.velocity.x != 0 || myRb.velocity.z != 0)&&myRb.velocity.magnitude>1f)
+        {
+            if (isSliding) {
+                if (SFX.clip != slide)
+                {
+                    SFX.clip = slide;
+                    SFX.loop = true;
+                    SFX.Play();
+                }
+            }else if (isGrounded)
+            {
+                if (SFX.loop)
+                    SFX.loop = false;
+                if(SFX.clip == null || !SFX.isPlaying)
+                {
+                    SFX.clip = steps[Random.Range(0, steps.Length)];
+                    SFX.Play();
+                }
+            }else if (SFX.clip != null)
+            {
+                SFX.Stop();
+                if (SFX.loop)
+                    SFX.loop = false;
+                SFX.clip = null;
+            }
+        }
+        else if (SFX.clip != null)
+        {
+            SFX.Stop();
+            if (SFX.loop)
+                SFX.loop = false;
+            SFX.clip = null;
+        }
     }
     private void LateUpdate()
     {
@@ -363,7 +399,7 @@ public class Run : MonoBehaviour
     private void Slide(float size) {
         properSize = size;
         if(size == .5f){
-            myRb.mass = .5f;
+            myRb.mass = .1f;
             isSliding = true;
             myRb.AddForce(MyCamera.forward * jumpForwardForce, ForceMode.Force);
         } else {
