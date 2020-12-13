@@ -43,7 +43,7 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
   m_PlayOnAwake: 0
-  m_Volume: 1
+  m_Volume: 0.4
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -170,7 +170,7 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
   m_PlayOnAwake: 0
-  m_Volume: 1
+  m_Volume: 0.4
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -599,6 +599,8 @@ MonoBehaviour:
   divider: 33
   divider2: 50
   divider3: 25
+  dividerSlide: 100
+  dividerCrouch: 15
   timeToStopMiAir: 0.75
   AirDragXZ: 0.999
   maxVelocity: 25
@@ -606,7 +608,7 @@ MonoBehaviour:
   isGrounded: 0
   wasGrounded: 0
   slope: 0
-  jumpUpForce: 650
+  jumpUpForce: 350
   jumpForwardForce: 50
   slideSize: 0.5
   steps:
