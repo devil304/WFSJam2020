@@ -118,6 +118,15 @@ public class Run : MonoBehaviour
     Vector2 MDelta;
     [SerializeField]float ClimbForce = 0;
 
+    private void OnDestroy()
+    {
+        inputy.main.move.Dispose();
+        inputy.main.Camera.Dispose();
+        inputy.main.Jump.Dispose();
+        inputy.main.Slide.Dispose();
+        inputy.main.Hook.Dispose();
+    }
+
     public void addPowerUP(int ile = 1)
     {
         powerUps += ile;
