@@ -9,7 +9,7 @@ public class UIMan : MonoBehaviour
 {
     [SerializeField] Transform meta, robocik, player;
     [SerializeField] Slider hype;
-    [SerializeField] float maxDist=250, minDist = 1;
+    [SerializeField] float maxDist=200, minDist = 1;
     [SerializeField] TextMeshProUGUI TMP, year;
     bool toolate = false;
     Run r;
@@ -36,7 +36,7 @@ public class UIMan : MonoBehaviour
             toolate = true;
         if (Mathf.Abs(Vector2.Distance(playerV2, metaV2))> Mathf.Abs(Vector2.Distance(robocikV2, metaV2))||toolate)
         {
-            hype.value = Mathf.Clamp(Mathf.Abs(Mathf.Abs(Vector2.Distance(playerV2, robocikV2)-250) /250),0,1);
+            hype.value = Mathf.Clamp(Mathf.Abs(Mathf.Abs(Vector2.Distance(playerV2, robocikV2)-maxDist) /maxDist),0,1);
         }
         else
         {
@@ -61,5 +61,5 @@ public class UIMan : MonoBehaviour
 }
 
 public static class Data{
-    public static float year = 2020, dist=10;
+    public static float year = 2020, dist=150;
 }

@@ -34,8 +34,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 200, y: 50}
+  m_AnchoredPosition: {x: -121.2, y: 0}
+  m_SizeDelta: {x: 302.99, y: 50}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &587233479
 CanvasRenderer:
@@ -65,7 +65,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Year:'
+  m_text: 'Realease Date: '
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: a71d02853e14cdb43baee776f9c536b6, type: 2}
   m_sharedMaterial: {fileID: -6456635637556547565, guid: a71d02853e14cdb43baee776f9c536b6, type: 2}
@@ -723,7 +723,7 @@ MonoBehaviour:
   robocik: {fileID: 0}
   player: {fileID: 0}
   hype: {fileID: 822454094461036210}
-  maxDist: 250
+  maxDist: 200
   minDist: 1
   TMP: {fileID: 822454095740029610}
   year: {fileID: 1843848043}

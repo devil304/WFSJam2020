@@ -8,7 +8,7 @@ public class Run : MonoBehaviour
     Rigidbody myRb;
     [SerializeField] float speed = 10, targetSpeed = 10, startSpeed = 15, speedUpTime = 2;
     [SerializeField, Range(0,100)] float CamSpeedY = 1, CamSpeedX = 1;
-    [SerializeField] float minAngle, maxAngle, stickiness=5, targetSSpeed = 10, startSSpeed = 15, SspeedUpTime = 2, divider=44, divider2=44, divider3 = 3, dividerSlide = 100, dividerCrouch = 15, timeToStopMiAir = 3, AirDragXZ = 2, maxVelocity = 15;
+    [SerializeField] float minAngle, maxAngle, stickiness=5, targetSSpeed = 10, startSSpeed = 15, SspeedUpTime = 2, divider=44, divider2=44, divider3 = 3, dividerSlide = 100, dividerCrouch = 15, timeToStopMiAir = 3, AirDragXZ = 2, maxVelocity = 15, hookSpeed = 50;
     Vector2 val = Vector2.zero;
     Transform MyCamera, Camholder, rotator, Gimbal;
     [SerializeField]bool climb, isGrounded, wasGrounded, slope;
@@ -109,7 +109,7 @@ public class Run : MonoBehaviour
             RaycastHit hit;
             if (powerUps > 0 && Physics.Raycast(MyCamera.position, MyCamera.forward, out hit, 64))
             {
-                myRb.AddForce(MyCamera.forward * 32, ForceMode.Impulse);
+                myRb.AddForce(MyCamera.forward * hookSpeed, ForceMode.Impulse);
                 powerUps--;
             }
         };
@@ -125,6 +125,7 @@ public class Run : MonoBehaviour
         inputy.main.Jump.Dispose();
         inputy.main.Slide.Dispose();
         inputy.main.Hook.Dispose();
+        Cursor.lockState = CursorLockMode.None;
     }
 
     public void addPowerUP(int ile = 1)
