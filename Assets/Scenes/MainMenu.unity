@@ -1110,7 +1110,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de5f03aecd42fbc4e87613e9b6f9fcb8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playScene: {fileID: 102900000, guid: b02cbaff8ae7f18439086a1538004df8, type: 3}
+  playScene: MapUno
 --- !u!114 &1236366528
 MonoBehaviour:
   m_ObjectHideFlags: 0
