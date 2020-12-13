@@ -8,7 +8,7 @@ public class Run : MonoBehaviour
     Rigidbody myRb;
     [SerializeField] float speed = 10, targetSpeed = 10, startSpeed = 15, speedUpTime = 2;
     [SerializeField, Range(0,100)] float CamSpeedY = 1, CamSpeedX = 1;
-    [SerializeField] float minAngle, maxAngle, stickiness=5, targetSSpeed = 10, startSSpeed = 15, SspeedUpTime = 2, divider=44, divider2=44, divider3 = 3, timeToStopMiAir = 3, AirDragXZ = 2, maxVelocity = 15;
+    [SerializeField] float minAngle, maxAngle, stickiness=5, targetSSpeed = 10, startSSpeed = 15, SspeedUpTime = 2, divider=44, divider2=44, divider3 = 3, dividerSlide = 100, dividerCrouch = 15, timeToStopMiAir = 3, AirDragXZ = 2, maxVelocity = 15;
     Vector2 val = Vector2.zero;
     Transform MyCamera, Camholder, rotator, Gimbal;
     [SerializeField]bool climb, isGrounded, wasGrounded, slope;
@@ -47,10 +47,16 @@ public class Run : MonoBehaviour
             }
             //Debug.Log("Why nufyn");
             val = v.ReadValue<Vector2>();
-            if (!climb && !isGrounded && !slope || isSliding)
+            if (!climb && !isGrounded && !slope)
             {
                 val /= divider3;
                 //Debug.Log(val);
+            }
+
+            if(isSliding && myRb.velocity.magnitude > 2){
+                val /= dividerSlide;
+            } else if(isSliding) {
+                val /= dividerCrouch;
             }
         };
         inputy.main.move.canceled += v => {
@@ -62,7 +68,7 @@ public class Run : MonoBehaviour
             }
             //Debug.Log("Why nufynC");
             val = v.ReadValue<Vector2>();
-            if (!climb && !isGrounded && !slope || isSliding)
+            if (!climb && !isGrounded && !slope)
             {
                 val /= divider3;
                 //Debug.Log(val);
@@ -90,6 +96,9 @@ public class Run : MonoBehaviour
         };
         inputy.main.Slide.performed += v => {
             Slide(.5f);
+            if(isSliding){
+                val /= dividerSlide;
+            }
         };
 
         inputy.main.Slide.canceled += v => {
@@ -115,6 +124,7 @@ public class Run : MonoBehaviour
     }
     private void Update()
     {
+        // Debug.Log(val);
         /*if (!climb && !isGrounded && !slope)
         {
             val = Vector2.zero;
@@ -245,8 +255,6 @@ public class Run : MonoBehaviour
     private void OnCollisionEnter(Collision collision)
     {
         var angle = Vector3.SignedAngle(collision.contacts[0].normal, Vector3.up, Vector3.forward);
-        Debug.Log(angle);
-        Debug.Log(angle <= 16.0f);
         if(angle >= 0.0f && angle <= 16.0f){
             isGrounded=true;
             ClimbForce = 0;
